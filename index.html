@@ -1,63 +1,100 @@
+
 <!DOCTYPE html>
 <html>
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>TOK - TikTok from Scratch</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>TOK</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:#000;color:#fff;font-family:Arial;overflow:hidden}
-#feed{height:100vh;overflow-y:scroll;scroll-snap-type:y mandatory}
-.post{height:100vh;scroll-snap-align:start;position:relative;display:flex;justify-content:center;align-items:center}
+.top{position:fixed;top:0;left:0;right:0;z-index:10;display:flex;gap:8px;padding:10px;background:linear-gradient(#000,transparent)}
+.top input{flex:1;padding:10px 14px;border-radius:20px;border:none;background:#222;color:#fff}
+.top button{padding:10px 14px;border-radius:20px;border:none;background:#fff;color:#000;font-weight:bold}
+#feed{height:100vh;overflow-y:scroll;scroll-snap-type:y mandatory;padding-top:0}
+.post{height:100vh;scroll-snap-align:start;position:relative;display:flex;justify-content:center}
 video{width:100%;height:100%;object-fit:cover}
-.right{position:absolute;right:12px;bottom:120px;display:flex;flex-direction:column;gap:20px;align-items:center}
-.circle{width:45px;height:45px;background:#333;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px}
-.info{position:absolute;bottom:20px;left:12px;right:70px}
-.info b{font-size:16px}
-.info p{font-size:14px;margin:5px 0}
-.music{font-size:12px;margin-top:8px}
+.right{position:absolute;right:10px;bottom:120px;display:flex;flex-direction:column;gap:18px;align-items:center}
+.btn{width:52px;height:52px;background:#222;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:18px;cursor:pointer;border:2px solid transparent}
+.btn.liked{background:#ff2a6d;border-color:#ff2a6d}
+.btn span{font-size:11px;margin-top:2px}
+.info{position:absolute;bottom:18px;left:10px;right:80px}
+.comments{position:fixed;bottom:0;left:0;right:0;background:#111;border-radius:20px 20px 0 0;max-height:70vh;display:none;flex-direction:column;z-index:20}
+.comments.show{display:flex}
+.c-head{padding:12px;text-align:center;border-bottom:1px solid #333}
+.c-list{flex:1;overflow:auto;padding:10px;display:flex;flex-direction:column;gap:10px}
+.c-item{background:#222;padding:8px 10px;border-radius:10px;font-size:13px}
+.c-input{display:flex;gap:8px;padding:10px;border-top:1px solid #333}
+.c-input input{flex:1;padding:10px;border-radius:20px;border:none;background:#222;color:#fff}
+.upload{position:fixed;bottom:70px;left:50%;transform:translateX(-50%);z-index:15}
+.upload label{background:#fff;color:#000;padding:12px 20px;border-radius:30px;font-weight:bold;cursor:pointer}
+#file{display:none}
 </style>
 </head>
 <body>
-<div id="feed">
-  <!-- VIDEO 1 -->
-  <div class="post">
-    <video src="https://www.w3schools.com/html/mov_bbb.mp4" autoplay loop muted playsinline onclick="this.muted=!this.muted"></video>
-    <div class="right">
-      <div class="circle">❤️<br>12k</div>
-      <div class="circle">💬<br>430</div>
-      <div class="circle">↗️</div>
-    </div>
-    <div class="info">
-      <b>@you</b>
-      <p>My first TOK video! Built from scratch 🔥 #tok</p>
-      <div class="music">♫ Original sound - you</div>
-    </div>
-  </div>
-  <!-- VIDEO 2 -->
-  <div class="post">
-    <video src="https://www.w3schools.com/html/movie.mp4" loop muted playsinline onclick="this.muted=!this.muted"></video>
-    <div class="right">
-      <div class="circle">❤️<br>8k</div>
-      <div class="circle">💬<br>120</div>
-      <div class="circle">↗️</div>
-    </div>
-    <div class="info">
-      <b>@you</b>
-      <p>Swipe up! Second video working 👌</p>
-      <div class="music">♫ Viral sound</div>
-    </div>
-  </div>
+<div class="top">
+<input id="search" placeholder="Search caption..." oninput="doSearch(this.value)">
+<button onclick="document.getElementById('file').click()">+ Upload</button>
 </div>
+
+<div id="feed"></div>
+
+<div class="upload"><label for="file">＋ Upload Video</label><input type="file" id="file" accept="video/*"></div>
+
+<div class="comments" id="commentBox">
+<div class="c-head"><b>Comments</b> <span style="float:right" onclick="closeC()">✕</span></div>
+<div class="c-list" id="cList"></div>
+<div class="c-input"><input id="cInput" placeholder="Add comment..."><button onclick="addComment()" style="padding:8px 14px;border-radius:20px;border:none;background:#fff;font-weight:bold">Send</button></div>
+</div>
+
 <script>
-// Auto play when you swipe
-const videos=document.querySelectorAll('video');
+let posts=[
+{id:1, user:"@you", cap:"My first TOK! Built from scratch 🔥 #tok", music:"Original sound", src:"https://www.w3schools.com/html/mov_bbb.mp4", likes:12000, liked:false, comments:["Nice one!","🔥🔥"]},
+{id:2, user:"@you", cap:"Second video swipe up 👌 bear in river", music:"Viral sound", src:"https://www.w3schools.com/html/movie.mp4", likes:8000, liked:false, comments:["lol bear"]}
+];
+let currentPost=null;
 const feed=document.getElementById('feed');
-feed.addEventListener('scroll',()=>{
-  videos.forEach(v=>{
-    const rect=v.getBoundingClientRect();
-    if(rect.top>=0 && rect.top<window.innerHeight/2){v.play()}else{v.pause()}
-  })
-})
+function render(list=posts){
+feed.innerHTML='';
+list.forEach(p=>{
+const div=document.createElement('div');div.className='post';div.dataset.id=p.id;
+div.innerHTML=`<video src="${p.src}" loop playsinline muted onclick="this.muted=!this.muted; this.play()"></video>
+<div class="right">
+<div class="btn ${p.liked?'liked':''}" onclick="like(${p.id})">❤️<span>${format(p.likes)}</span></div>
+<div class="btn" onclick="openC(${p.id})">💬<span>${p.comments.length}</span></div>
+<div class="btn" onclick="navigator.clipboard.writeText(location.href)">↗️</div>
+</div>
+<div class="info"><b>${p.user}</b><p>${p.cap}</p><div style="font-size:12px">♫ ${p.music}</div></div>`;
+feed.appendChild(div);
+});
+autoPlay();
+}
+function format(n){return n>=1000? (n/1000)+'k': n}
+function like(id){
+const p=posts.find(x=>x.id===id); p.liked=!p.liked; p.likes+=p.liked?1:-1; render(filtered||posts);
+}
+function openC(id){currentPost=posts.find(x=>x.id===id); document.getElementById('commentBox').classList.add('show'); showComments();}
+function closeC(){document.getElementById('commentBox').classList.remove('show');}
+function showComments(){
+const list=document.getElementById('cList'); list.innerHTML=''; currentPost.comments.forEach(c=>{const d=document.createElement('div');d.className='c-item';d.textContent=c;list.appendChild(d);});
+}
+function addComment(){
+const i=document.getElementById('cInput'); if(!i.value.trim())return; currentPost.comments.push(i.value); i.value=''; render(filtered||posts); showComments(); openC(currentPost.id);
+}
+let filtered=null;
+function doSearch(v){
+if(!v.trim()){filtered=null; render(); return;}
+filtered=posts.filter(p=>p.cap.toLowerCase().includes(v.toLowerCase())); render(filtered);
+}
+document.getElementById('file').addEventListener('change',e=>{
+const file=e.target.files[0]; if(!file)return; const url=URL.createObjectURL(file);
+posts.unshift({id:Date.now(), user:"@you", cap:file.name, music:"My upload", src:url, likes:0, liked:false, comments:[]}); filtered=null; document.getElementById('search').value=''; render();
+});
+function autoPlay(){
+const vids=document.querySelectorAll('video');
+const ob=new IntersectionObserver(es=>{es.forEach(en=>{if(en.isIntersecting)en.target.play();else en.target.pause();})},{threshold:0.7});
+vids.forEach(v=>ob.observe(v));
+}
+render();
 </script>
 </body>
 </html>
