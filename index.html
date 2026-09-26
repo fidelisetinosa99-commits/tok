@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TOK - TikTok from Scratch</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#000;color:#fff;font-family:Arial;overflow:hidden}
+#feed{height:100vh;overflow-y:scroll;scroll-snap-type:y mandatory}
+.post{height:100vh;scroll-snap-align:start;position:relative;display:flex;justify-content:center;align-items:center}
+video{width:100%;height:100%;object-fit:cover}
+.right{position:absolute;right:12px;bottom:120px;display:flex;flex-direction:column;gap:20px;align-items:center}
+.circle{width:45px;height:45px;background:#333;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px}
+.info{position:absolute;bottom:20px;left:12px;right:70px}
+.info b{font-size:16px}
+.info p{font-size:14px;margin:5px 0}
+.music{font-size:12px;margin-top:8px}
+</style>
+</head>
+<body>
+<div id="feed">
+  <!-- VIDEO 1 -->
+  <div class="post">
+    <video src="https://www.w3schools.com/html/mov_bbb.mp4" autoplay loop muted playsinline onclick="this.muted=!this.muted"></video>
+    <div class="right">
+      <div class="circle">❤️<br>12k</div>
+      <div class="circle">💬<br>430</div>
+      <div class="circle">↗️</div>
+    </div>
+    <div class="info">
+      <b>@you</b>
+      <p>My first TOK video! Built from scratch 🔥 #tok</p>
+      <div class="music">♫ Original sound - you</div>
+    </div>
+  </div>
+  <!-- VIDEO 2 -->
+  <div class="post">
+    <video src="https://www.w3schools.com/html/movie.mp4" loop muted playsinline onclick="this.muted=!this.muted"></video>
+    <div class="right">
+      <div class="circle">❤️<br>8k</div>
+      <div class="circle">💬<br>120</div>
+      <div class="circle">↗️</div>
+    </div>
+    <div class="info">
+      <b>@you</b>
+      <p>Swipe up! Second video working 👌</p>
+      <div class="music">♫ Viral sound</div>
+    </div>
+  </div>
+</div>
+<script>
+// Auto play when you swipe
+const videos=document.querySelectorAll('video');
+const feed=document.getElementById('feed');
+feed.addEventListener('scroll',()=>{
+  videos.forEach(v=>{
+    const rect=v.getBoundingClientRect();
+    if(rect.top>=0 && rect.top<window.innerHeight/2){v.play()}else{v.pause()}
+  })
+})
+</script>
+</body>
+</html>
